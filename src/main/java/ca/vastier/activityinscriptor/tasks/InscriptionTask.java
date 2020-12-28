@@ -26,6 +26,7 @@ import static java.util.Optional.ofNullable;
 @Component
 public class InscriptionTask implements Task
 {
+	//TODO decouple spring's rest template
 	private final RestTemplate restTemplate;
 
 	//TODO inject properties in a better way
@@ -55,7 +56,7 @@ public class InscriptionTask implements Task
 		final Collection<String> cookiesToPass = extractCookiesWithValuesFromHeaders(authenticationResponse.getHeaders());
 
 		ResponseEntity<String> bookingResponse;
-		final long delayBetweenTries = ofNullable((Long)parameters.get("delay")).orElse(1000L);
+		final long delayBetweenTries = ofNullable(Long.parseLong((String)parameters.get("delay"))).orElse(1000L);
 		do
 		{
 			try
