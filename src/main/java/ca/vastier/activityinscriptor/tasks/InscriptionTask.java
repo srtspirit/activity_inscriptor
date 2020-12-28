@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.Setter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -26,6 +28,8 @@ import static java.util.Optional.ofNullable;
 @Component
 public class InscriptionTask implements Task
 {
+	private final static Logger LOGGER = LoggerFactory.getLogger(InscriptionTask.class);
+
 	//TODO decouple spring's rest template
 	private final RestTemplate restTemplate;
 
@@ -52,27 +56,33 @@ public class InscriptionTask implements Task
 	public void run(final Map<String, Object> parameters)
 	{
 		final ResponseEntity<String> authenticationResponse = authenticate(parameters);
+		LOGGER.info("sent authentification request... Responded with status code: {}. The response body: {}",
+				authenticationResponse.getStatusCodeValue(), authenticationResponse.getBody());
 		assertSuccessfulLogin(authenticationResponse);
 		final Collection<String> cookiesToPass = extractCookiesWithValuesFromHeaders(authenticationResponse.getHeaders());
 
 		ResponseEntity<String> bookingResponse;
-		final long delayBetweenTries = ofNullable(Long.parseLong((String)parameters.get("delay"))).orElse(1000L);
+		final long delayBetweenTries = ofNullable(Long.parseLong((String) parameters.get("delay"))).orElse(1000L);
 		do
 		{
+			LOGGER.info("The inscription has not started yet"); //TODO on the first iteration this message might be wrong
 			try
 			{
 				Thread.sleep(delayBetweenTries);
 			}
 			catch (InterruptedException e)
 			{
-				e.printStackTrace();
 			}
 			bookingResponse = bookPlaceInEvent(parameters, cookiesToPass);
+			LOGGER.info("sent booking request... Responded with status code: {}. The response body: {}",
+					bookingResponse.getStatusCodeValue(), bookingResponse.getBody());
 		}
 		while (inscriptionIsNotYetOpen(bookingResponse));
 		assertSuccessfulBooking(bookingResponse);
 
 		final ResponseEntity<String> confirmationResponse = confirmBooking(parameters, cookiesToPass);
+		LOGGER.info("sent booking confirmation... Responded with status code: {}. The response body: {}",
+				confirmationResponse.getStatusCodeValue(), confirmationResponse.getBody());
 		assertSuccessfulConfirmation(confirmationResponse);
 	}
 
@@ -238,14 +248,12 @@ public class InscriptionTask implements Task
 				return false;
 			}
 
-			if (objectNode.get("error").booleanValue() && objectNode.get("message").asText().contains("cours plus de 2 jour(s) (48:00 heures) avant"))
-			{
-				return true;
-			}
+			return objectNode.get("error").booleanValue() && objectNode.get("message")
+					.asText()
+					.contains("cours plus de 2 jour(s) (48:00 heures) avant");
 		}
 
-
-			return false;
+		return false;
 
 	}
 
@@ -268,6 +276,7 @@ public class InscriptionTask implements Task
 
 	private String findContractNumber()
 	{
+		//TODO make normal extraction
 		return "207239";
 	}
 }
