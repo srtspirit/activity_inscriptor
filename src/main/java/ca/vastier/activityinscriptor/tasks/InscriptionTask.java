@@ -250,7 +250,7 @@ public class InscriptionTask implements Task
 
 			return objectNode.get("error").booleanValue() && objectNode.get("message")
 					.asText()
-					.contains("cours plus de 2 jour(s) (48:00 heures) avant");
+					.contains("plus de 2 jour(s) (48:00 heures) avant");
 		}
 
 		return false;
