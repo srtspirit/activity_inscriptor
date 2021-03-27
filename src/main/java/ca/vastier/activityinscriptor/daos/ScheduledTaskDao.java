@@ -8,5 +8,7 @@ import java.util.Collection;
 
 public interface ScheduledTaskDao extends MongoRepository<ScheduledTaskEntity, String>, ScheduledTaskDaoCustom
 {
-	default void saveTask(ScheduledTaskEntity task) {save(task);}
+	default ScheduledTaskEntity saveTask(ScheduledTaskEntity task) {
+		return save(task);
+	}
 }
