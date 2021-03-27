@@ -1,5 +1,6 @@
 package ca.vastier.activityinscriptor.tasks;
 
+import ca.vastier.activityinscriptor.daos.ScheduledTaskEntity;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -25,7 +26,7 @@ import java.util.stream.Collectors;
 
 import static java.util.Optional.ofNullable;
 
-@Component
+@Component("ACTIVITY_INSCRIPTOR") //TODO find a way to name beans
 public class InscriptionTask implements Task
 {
 	private final static Logger LOGGER = LoggerFactory.getLogger(InscriptionTask.class);

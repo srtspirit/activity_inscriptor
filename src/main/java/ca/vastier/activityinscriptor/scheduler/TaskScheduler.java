@@ -8,11 +8,17 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 
 import java.time.Clock;
 import java.time.ZonedDateTime;
 import java.util.Collection;
 
+import static ca.vastier.activityinscriptor.daos.ScheduledTaskEntity.TaskStatus.RUNNING;
+import static ca.vastier.activityinscriptor.daos.ScheduledTaskEntity.TaskStatus.SCHEDULED;
+
+@Component("ca.vastier.activityinscriptor.scheduler.TaskScheduler") // the default TaskScheduler is already bound by spring
 public class TaskScheduler
 {
 	private static final Logger LOGGER = LoggerFactory.getLogger(TaskScheduler.class);
@@ -29,32 +35,36 @@ public class TaskScheduler
 		this.applicationContext = applicationContext;
 	}
 
+	@Scheduled(fixedDelay = 5000)
 	public void scanForTasks()
 	{
 		final Collection<ScheduledTaskEntity> tasks = scheduledTaskDao.fetchTasksForExecution(ZonedDateTime.now(clock));
-		tasks.forEach(task -> {
+		LOGGER.debug("Scheduled scan for task ran. Found {} tasks for execution", tasks.size());
+
+		tasks.parallelStream().forEach(task -> {
 			final Task taskRunner;
 			try
 			{
 				LOGGER.info("scheduling a task {}", task.getId());
-			 taskRunner =	(Task) applicationContext.getBean(task.getType().name());
-			 //TODO use a normal thread pool
-			 new Thread(() -> {
-			 	try
+				taskRunner = (Task) applicationContext.getBean(task.getType().name());
+				scheduledTaskDao.changeTasksStatus(task.getId(), RUNNING, SCHEDULED);
+
+				try
 				{
 					taskRunner.run(task.getParameters());
 				}
-			 	//TODO catch different exceptions including RetryLaterException
-			 	catch (final Throwable e)
+				//TODO catch different exceptions including RetryLaterException
+				catch (final Throwable e)
 				{
 					LOGGER.error(e.getMessage(), e);
 					task.setStatus(ScheduledTaskEntity.TaskStatus.FAILED);
 					scheduledTaskDao.saveTask(task);
 				}
 
-			 	task.setStatus(ScheduledTaskEntity.TaskStatus.FINISHED);
-			 	scheduledTaskDao.saveTask(task);
-			 }).start();
+				task.setStatus(ScheduledTaskEntity.TaskStatus.FINISHED);
+				scheduledTaskDao.saveTask(task);
+
+				LOGGER.info("Graceful completion of the task {}", task.getId());
 			}
 			catch (final BeansException | ClassCastException e)
 			{

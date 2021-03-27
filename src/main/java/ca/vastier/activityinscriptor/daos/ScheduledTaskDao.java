@@ -1,18 +1,12 @@
 package ca.vastier.activityinscriptor.daos;
 
 import ca.vastier.activityinscriptor.daos.ScheduledTaskEntity.TaskStatus;
+import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.time.ZonedDateTime;
 import java.util.Collection;
 
-public interface ScheduledTaskDao
+public interface ScheduledTaskDao extends MongoRepository<ScheduledTaskEntity, String>, ScheduledTaskDaoCustom
 {
-	/**
-	 * .... Changes status to {@link TaskStatus#RUNNING}
-	 * @param dateTime
-	 * @return
-	 */
-	Collection<ScheduledTaskEntity> fetchTasksForExecution(ZonedDateTime dateTime);
-	void changeTasksStatus(Collection<String> ids, TaskStatus status);
-	void saveTask(ScheduledTaskEntity scheduledTaskEntity);
+	default void saveTask(ScheduledTaskEntity task) {save(task);}
 }
