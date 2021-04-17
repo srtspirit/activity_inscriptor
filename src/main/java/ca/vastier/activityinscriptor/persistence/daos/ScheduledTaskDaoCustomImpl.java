@@ -1,5 +1,8 @@
-package ca.vastier.activityinscriptor.daos;
+package ca.vastier.activityinscriptor.persistence.daos;
 
+import ca.vastier.activityinscriptor.config.Constants;
+import ca.vastier.activityinscriptor.persistence.entities.ScheduledTaskEntity;
+import ca.vastier.activityinscriptor.persistence.namespaces.ScheduledTaskEntityNamespace;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -15,6 +18,9 @@ import java.util.stream.Collectors;
 @Repository
 public class ScheduledTaskDaoCustomImpl implements ScheduledTaskDaoCustom
 {
+	private static final int TIME_ZONES_IN_THE_WORLD = 24;
+	private static final int LOOK_AHEAD_TIME_HOURS = (int)(TIME_ZONES_IN_THE_WORLD + Constants.MAX_PREPARATION_TASK_TIME_MS/3600000);
+
 	private final MongoTemplate mongoTemplate;
 
 	@Autowired
@@ -27,10 +33,10 @@ public class ScheduledTaskDaoCustomImpl implements ScheduledTaskDaoCustom
 	public Collection<ScheduledTaskEntity> fetchTasksForExecution(final ZonedDateTime dateTime)
 	{
 		final LocalDateTime searchingDateTime = dateTime.toLocalDateTime();
-		final Query query = new Query().addCriteria(Criteria.where("startTime")
+		final Query query = new Query().addCriteria(Criteria.where(ScheduledTaskEntityNamespace.Columns.START_TIME)
 				.lte(searchingDateTime.plusHours(
-						25)) // 25 is 24h in a day + 1h of possible warmimg time. Looking to a day ahead because no time zone saved in the field startTime
-				.and("status")
+						LOOK_AHEAD_TIME_HOURS)) //no time zones are kept in start time so consider all tasks within 24h plus warming up time
+				.and(ScheduledTaskEntityNamespace.Columns.STATUS)
 				.is(ScheduledTaskEntity.TaskStatus.SCHEDULED));
 
 		final Collection<ScheduledTaskEntity> foundEntities = mongoTemplate.find(query, ScheduledTaskEntity.class);

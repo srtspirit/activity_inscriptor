@@ -1,7 +1,7 @@
 package ca.vastier.activityinscriptor.scheduler;
 
-import ca.vastier.activityinscriptor.daos.ScheduledTaskDao;
-import ca.vastier.activityinscriptor.daos.ScheduledTaskEntity;
+import ca.vastier.activityinscriptor.persistence.daos.ScheduledTaskDao;
+import ca.vastier.activityinscriptor.persistence.entities.ScheduledTaskEntity;
 import ca.vastier.activityinscriptor.tasks.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,13 +12,11 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.Clock;
-import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.util.Collection;
-import java.util.Map;
 
-import static ca.vastier.activityinscriptor.daos.ScheduledTaskEntity.TaskStatus.RUNNING;
-import static ca.vastier.activityinscriptor.daos.ScheduledTaskEntity.TaskStatus.SCHEDULED;
+import static ca.vastier.activityinscriptor.persistence.entities.ScheduledTaskEntity.TaskStatus.RUNNING;
+import static ca.vastier.activityinscriptor.persistence.entities.ScheduledTaskEntity.TaskStatus.SCHEDULED;
 
 @Component("ca.vastier.activityinscriptor.scheduler.TaskScheduler") // the default TaskScheduler is already bound by spring
 public class TaskScheduler

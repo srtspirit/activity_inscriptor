@@ -1,15 +1,12 @@
 package ca.vastier.activityinscriptor.dtos;
 
-import ca.vastier.activityinscriptor.daos.ScheduledTaskEntity;
+import ca.vastier.activityinscriptor.persistence.entities.ScheduledTaskEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.Period;
-import java.time.ZonedDateTime;
 import java.util.Map;
 
 @Builder

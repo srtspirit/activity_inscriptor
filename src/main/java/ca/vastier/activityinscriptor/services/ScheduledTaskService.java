@@ -1,7 +1,7 @@
 package ca.vastier.activityinscriptor.services;
 
-import ca.vastier.activityinscriptor.daos.ScheduledTaskDao;
-import ca.vastier.activityinscriptor.daos.ScheduledTaskEntity;
+import ca.vastier.activityinscriptor.persistence.daos.ScheduledTaskDao;
+import ca.vastier.activityinscriptor.persistence.entities.ScheduledTaskEntity;
 import ca.vastier.activityinscriptor.dtos.ScheduledTaskDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -37,7 +37,7 @@ public class ScheduledTaskService
 
 	public Collection<ScheduledTaskDto> getAllTasks()
 	{
-		final Collection<ScheduledTaskEntity> entities = scheduledTaskDao.findAll();
+		final Collection<ScheduledTaskEntity> entities = scheduledTaskDao.getAllTasks();
 		return entities.stream().map(entity -> objectMapper.convertValue(entity, ScheduledTaskDto.class)).collect(Collectors.toList());
 	}
 }

@@ -1,6 +1,5 @@
 package ca.vastier.activityinscriptor.tasks;
 
-import ca.vastier.activityinscriptor.daos.ScheduledTaskEntity;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
