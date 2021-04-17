@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 
 import static java.util.Optional.ofNullable;
 
-@Component
+@Component("ACTIVITY_INSCRIPTOR") //TODO find a way to name beans
 public class InscriptionTask implements Task
 {
 	private final static Logger LOGGER = LoggerFactory.getLogger(InscriptionTask.class);
@@ -187,7 +187,7 @@ public class InscriptionTask implements Task
 			catch (JsonProcessingException e)
 			{
 				//TODO create a good exception
-				e.printStackTrace();
+				throw new RuntimeException("booking failure");
 			}
 
 			if (objectNode.get("error").booleanValue())
@@ -217,19 +217,19 @@ public class InscriptionTask implements Task
 			catch (JsonProcessingException e)
 			{
 				//TODO create a good exception
-				e.printStackTrace();
+				throw new RuntimeException("confirmation failure");
 			}
 
 			if (objectNode.get("error").booleanValue())
 			{
 				//TODO create a good exception
-				throw new RuntimeException("booking failure");
+				throw new RuntimeException("confirmation failure");
 			}
 		}
 		else
 		{
 			//TODO create a good exception
-			throw new RuntimeException("booking failure");
+			throw new RuntimeException("confirmation failure");
 		}
 	}
 
