@@ -2,10 +2,13 @@ package ca.vastier.activityinscriptor.controllers;
 
 import ca.vastier.activityinscriptor.dtos.ScheduledTaskDto;
 import ca.vastier.activityinscriptor.services.ScheduledTaskService;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Collection;
 
 @RestController
 @RequestMapping("tasks")
@@ -22,5 +25,11 @@ public class ScheduledTaskController
 	public ScheduledTaskDto createTask(@RequestBody final ScheduledTaskDto scheduledTaskDto)
 	{
 		return scheduledTaskService.createTask(scheduledTaskDto);
+	}
+
+	@GetMapping
+	public Collection<ScheduledTaskDto> getAll()
+	{
+		return scheduledTaskService.getAllTasks();
 	}
 }

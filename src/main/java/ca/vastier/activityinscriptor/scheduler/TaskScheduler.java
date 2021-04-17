@@ -12,8 +12,10 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.Clock;
+import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.util.Collection;
+import java.util.Map;
 
 import static ca.vastier.activityinscriptor.daos.ScheduledTaskEntity.TaskStatus.RUNNING;
 import static ca.vastier.activityinscriptor.daos.ScheduledTaskEntity.TaskStatus.SCHEDULED;
@@ -52,23 +54,26 @@ public class TaskScheduler
 				try
 				{
 					taskRunner.run(task.getParameters());
+					task.setStatus(ScheduledTaskEntity.TaskStatus.FINISHED);
+					scheduledTaskDao.saveTask(task);
+
+					LOGGER.info("Graceful completion of the task {}", task.getId());
 				}
 				//TODO catch different exceptions including RetryLaterException
 				catch (final Throwable e)
 				{
 					LOGGER.error(e.getMessage(), e);
 					task.setStatus(ScheduledTaskEntity.TaskStatus.FAILED);
+					task.setMessage(e.getMessage());
 					scheduledTaskDao.saveTask(task);
 				}
-
-				task.setStatus(ScheduledTaskEntity.TaskStatus.FINISHED);
-				scheduledTaskDao.saveTask(task);
-
-				LOGGER.info("Graceful completion of the task {}", task.getId());
 			}
 			catch (final BeansException | ClassCastException e)
 			{
 				LOGGER.error(e.getMessage(), e);
+				task.setStatus(ScheduledTaskEntity.TaskStatus.FAILED);
+				task.setMessage(e.getMessage());
+				scheduledTaskDao.saveTask(task);
 			}
 		});
 	}

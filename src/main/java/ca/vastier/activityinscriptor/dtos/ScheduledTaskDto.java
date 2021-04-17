@@ -22,7 +22,7 @@ public class ScheduledTaskDto
 	//TODO validation
 	//TODO find a good way to work with time
 	private LocalDateTime startTime;
-	private Duration requiredPreparationTime;
+	private Long requiredPreparationTime;
 	private Map<String, Object> parameters;
 	private ScheduledTaskEntity.TaskType type;
 	private ScheduledTaskEntity.TaskStatus status;

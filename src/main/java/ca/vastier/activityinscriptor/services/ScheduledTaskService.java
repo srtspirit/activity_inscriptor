@@ -8,7 +8,9 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
+import java.util.Collection;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class ScheduledTaskService
@@ -27,9 +29,15 @@ public class ScheduledTaskService
 	public ScheduledTaskDto createTask(final ScheduledTaskDto scheduledTaskDto)
 	{
 		final ScheduledTaskEntity scheduledTaskEntity = objectMapper.convertValue(scheduledTaskDto, ScheduledTaskEntity.class);
+		scheduledTaskEntity.setId(UUID.randomUUID().toString());
 		final ScheduledTaskEntity savedEntity = scheduledTaskDao.saveTask(scheduledTaskEntity);
-		savedEntity.setRequiredPreparationTime(Duration.ofSeconds(5));
 
 		return objectMapper.convertValue(savedEntity, ScheduledTaskDto.class);
+	}
+
+	public Collection<ScheduledTaskDto> getAllTasks()
+	{
+		final Collection<ScheduledTaskEntity> entities = scheduledTaskDao.findAll();
+		return entities.stream().map(entity -> objectMapper.convertValue(entity, ScheduledTaskDto.class)).collect(Collectors.toList());
 	}
 }
