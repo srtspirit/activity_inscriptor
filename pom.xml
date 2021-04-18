@@ -8,6 +8,25 @@
     <artifactId>activity-inscriptor</artifactId>
     <version>1.0.2-SNAPSHOT</version>
 
+    <properties>
+        <environment>default</environment>
+    </properties>
+
+    <profiles>
+        <profile>
+            <id>dev</id>
+            <properties>
+                <environment>dev</environment>
+            </properties>
+        </profile>
+        <profile>
+            <id>heroku</id>
+            <properties>
+                <environment>heroku</environment>
+            </properties>
+        </profile>
+    </profiles>
+
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -45,8 +64,10 @@
                 <version>2.2.1.RELEASE</version>
                 <configuration>
                     <mainClass>ca.vastier.activityinscriptor.Application</mainClass>
+                    <profiles>
+                        <profile>${environment}</profile>
+                    </profiles>
                 </configuration>
-
                 <executions>
                     <execution>
                         <goals>
