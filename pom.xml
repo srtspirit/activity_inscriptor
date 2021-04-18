@@ -71,6 +71,7 @@
                 <executions>
                     <execution>
                         <goals>
+                            <!--when ran as java -jar without this goal a error "no main manifest attribute" is received -->
                             <goal>repackage</goal>
                         </goals>
                     </execution>

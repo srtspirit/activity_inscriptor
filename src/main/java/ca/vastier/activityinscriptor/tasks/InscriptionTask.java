@@ -29,9 +29,14 @@ import static java.util.Optional.ofNullable;
 public class InscriptionTask implements Task
 {
 	private final static Logger LOGGER = LoggerFactory.getLogger(InscriptionTask.class);
+	private final static String ERROR_FIELD = "error";
+	private final static String MESSAGE_FIELD = "message";
+
+	private final int MAX_INSCRIPTION_ATTEMTS = 1000;
 
 	//TODO decouple spring's rest template
 	private final RestTemplate restTemplate;
+	private final ObjectMapper objectMapper;
 
 	//TODO inject properties in a better way
 	@Setter
@@ -51,6 +56,7 @@ public class InscriptionTask implements Task
 	public InscriptionTask(final RestTemplate restTemplate)
 	{
 		this.restTemplate = restTemplate;
+		this.objectMapper = new ObjectMapper();
 	}
 
 	public void run(final Map<String, Object> parameters)
@@ -61,23 +67,33 @@ public class InscriptionTask implements Task
 		assertSuccessfulLogin(authenticationResponse);
 		final Collection<String> cookiesToPass = extractCookiesWithValuesFromHeaders(authenticationResponse.getHeaders());
 
-		ResponseEntity<String> bookingResponse;
+		ResponseEntity<String> bookingResponse = null;
+
 		final long delayBetweenTries = ofNullable(Long.parseLong((String) parameters.get("delay"))).orElse(1000L);
-		do
+
+		for (int i = 0; i < MAX_INSCRIPTION_ATTEMTS; i++)
 		{
-			LOGGER.info("The inscription has not started yet"); //TODO on the first iteration this message might be wrong
-			try
-			{
-				Thread.sleep(delayBetweenTries);
-			}
-			catch (InterruptedException e)
-			{
-			}
 			bookingResponse = bookPlaceInEvent(parameters, cookiesToPass);
 			LOGGER.info("sent booking request... Responded with status code: {}. The response body: {}",
 					bookingResponse.getStatusCodeValue(), bookingResponse.getBody());
+
+			if (inscriptionIsNotYetOpen(bookingResponse))
+			{
+				LOGGER.info("The inscription has not started yet");
+				try
+				{
+					Thread.sleep(delayBetweenTries);
+				}
+				catch (InterruptedException e)
+				{
+				}
+			}
+			else
+			{
+				break;
+			}
 		}
-		while (inscriptionIsNotYetOpen(bookingResponse));
+
 		assertSuccessfulBooking(bookingResponse);
 
 		final ResponseEntity<String> confirmationResponse = confirmBooking(parameters, cookiesToPass);
@@ -175,61 +191,41 @@ public class InscriptionTask implements Task
 
 	private void assertSuccessfulBooking(final ResponseEntity<String> responseEntity)
 	{
-
-		if (HttpStatus.OK.equals(responseEntity.getStatusCode()))
+		ObjectNode objectNode = null;
+		try
 		{
-			final ObjectMapper objectMapper = new ObjectMapper();
-			ObjectNode objectNode = null;
-			try
-			{
-				objectNode = objectMapper.readValue(responseEntity.getBody(), ObjectNode.class);
-			}
-			catch (JsonProcessingException e)
-			{
-				//TODO create a good exception
-				throw new RuntimeException("booking failure");
-			}
-
-			if (objectNode.get("error").booleanValue())
-			{
-				//TODO create a good exception
-				throw new RuntimeException("booking failure");
-			}
+			objectNode = objectMapper.readValue(extractJsonString(responseEntity.getBody()), ObjectNode.class);
 		}
-		else
+		catch (JsonProcessingException e)
 		{
 			//TODO create a good exception
 			throw new RuntimeException("booking failure");
+		}
+
+		if (!HttpStatus.OK.equals(responseEntity.getStatusCode()) || objectNode.get(ERROR_FIELD).booleanValue())
+		{
+			//TODO create a good exception
+			throw new RuntimeException(String.format("booking failure: %s", objectNode.get(MESSAGE_FIELD)));
 		}
 	}
 
 	private void assertSuccessfulConfirmation(final ResponseEntity<String> responseEntity)
 	{
-
-		if (HttpStatus.OK.equals(responseEntity.getStatusCode()))
+		ObjectNode objectNode = null;
+		try
 		{
-			final ObjectMapper objectMapper = new ObjectMapper();
-			ObjectNode objectNode = null;
-			try
-			{
-				objectNode = objectMapper.readValue(responseEntity.getBody(), ObjectNode.class);
-			}
-			catch (JsonProcessingException e)
-			{
-				//TODO create a good exception
-				throw new RuntimeException("confirmation failure");
-			}
-
-			if (objectNode.get("error").booleanValue())
-			{
-				//TODO create a good exception
-				throw new RuntimeException("confirmation failure");
-			}
+			objectNode = objectMapper.readValue(extractJsonString(responseEntity.getBody()), ObjectNode.class);
 		}
-		else
+		catch (JsonProcessingException e)
 		{
 			//TODO create a good exception
 			throw new RuntimeException("confirmation failure");
+		}
+
+		if (!HttpStatus.OK.equals(responseEntity.getStatusCode()) || objectNode.get(ERROR_FIELD).booleanValue())
+		{
+			//TODO create a good exception
+			throw new RuntimeException(String.format("confirmation failure: %s", objectNode.get(MESSAGE_FIELD)));
 		}
 	}
 
@@ -241,14 +237,14 @@ public class InscriptionTask implements Task
 			ObjectNode objectNode;
 			try
 			{
-				objectNode = objectMapper.readValue(responseEntity.getBody(), ObjectNode.class);
+				objectNode = objectMapper.readValue(extractJsonString(responseEntity.getBody()), ObjectNode.class);
 			}
 			catch (JsonProcessingException e)
 			{
 				return false;
 			}
 
-			return objectNode.get("error").booleanValue() && objectNode.get("message")
+			return objectNode.get(ERROR_FIELD).booleanValue() && objectNode.get(MESSAGE_FIELD)
 					.asText()
 					.contains("plus de 2 jour(s) (48:00 heures) avant");
 		}
@@ -278,5 +274,15 @@ public class InscriptionTask implements Task
 	{
 		//TODO make normal extraction
 		return "207239";
+	}
+
+	private String extractJsonString(final String str)
+	{
+		final int indexOfStartJsonBody = str.indexOf('{');
+		final int indexOfEndJsonBody = str.lastIndexOf('}');
+
+		return indexOfEndJsonBody == -1 || indexOfStartJsonBody == -1 ?
+				"{}" :
+				str.substring(indexOfStartJsonBody, indexOfEndJsonBody + 1);
 	}
 }
