@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.Clock;
+import java.time.ZoneId;
 
 @Configuration
 public class Config
@@ -18,6 +19,6 @@ public class Config
 	@Bean
 	public Clock clock()
 	{
-		return Clock.systemDefaultZone();
+		return Clock.system(ZoneId.of("America/Montreal"));
 	}
 }
