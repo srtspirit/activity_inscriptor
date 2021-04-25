@@ -1,6 +1,7 @@
 package ca.vastier.activityinscriptor.dtos;
 
 import ca.vastier.activityinscriptor.persistence.entities.ScheduledTaskEntity;
+import ca.vastier.activityinscriptor.persistence.entities.ScheduledTaskEntity.TaskStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -23,6 +24,7 @@ public class ScheduledTaskDto
 	private Long requiredPreparationTime = 7000L;
 	private Map<String, Object> parameters;
 	private ScheduledTaskEntity.TaskType type;
-	private ScheduledTaskEntity.TaskStatus status;
+	@Builder.Default
+	private TaskStatus status = TaskStatus.SCHEDULED;
 	private String message;
 }
