@@ -19,7 +19,8 @@ public class ScheduledTaskDto
 	//TODO validation
 	//TODO find a good way to work with time
 	private LocalDateTime startTime;
-	private Long requiredPreparationTime;
+	@Builder.Default
+	private Long requiredPreparationTime = 7000L;
 	private Map<String, Object> parameters;
 	private ScheduledTaskEntity.TaskType type;
 	private ScheduledTaskEntity.TaskStatus status;

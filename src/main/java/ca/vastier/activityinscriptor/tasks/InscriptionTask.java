@@ -23,16 +23,15 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static java.util.Optional.ofNullable;
-
 @Component("ACTIVITY_INSCRIPTOR") //TODO find a way to name beans
 public class InscriptionTask implements Task
 {
 	private final static Logger LOGGER = LoggerFactory.getLogger(InscriptionTask.class);
 	private final static String ERROR_FIELD = "error";
 	private final static String MESSAGE_FIELD = "message";
+	private final static long DEFAULT_POLL_INSCRIPTION_OPENING_INTERVAL_MS = 950L;
 
-	private final int MAX_INSCRIPTION_ATTEMTS = 1000;
+	private final int MAX_INSCRIPTION_ATTEMTS = 100;
 
 	//TODO decouple spring's rest template
 	private final RestTemplate restTemplate;
@@ -69,7 +68,8 @@ public class InscriptionTask implements Task
 
 		ResponseEntity<String> bookingResponse = null;
 
-		final long delayBetweenTries = ofNullable(Long.parseLong((String) parameters.get("delay"))).orElse(1000L);
+		final String givenDelay = (String) parameters.get("delay");
+		final long delayBetweenTries = givenDelay != null ? Long.parseLong(givenDelay) : DEFAULT_POLL_INSCRIPTION_OPENING_INTERVAL_MS;
 
 		for (int i = 0; i < MAX_INSCRIPTION_ATTEMTS; i++)
 		{
