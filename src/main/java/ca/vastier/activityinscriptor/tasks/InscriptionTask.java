@@ -61,8 +61,11 @@ public class InscriptionTask implements Task
 	public void run(final Map<String, Object> parameters)
 	{
 		final ResponseEntity<String> authenticationResponse = authenticate(parameters);
-		LOGGER.info("sent authentification request... Responded with status code: {}. The response body: {}",
-				authenticationResponse.getStatusCodeValue(), authenticationResponse.getBody());
+
+		LOGGER.info("sent authentification request... Responded with status code: {}",
+				authenticationResponse.getStatusCodeValue());
+		LOGGER.debug("The response body: {}", authenticationResponse.getBody());
+
 		assertSuccessfulLogin(authenticationResponse);
 		final Collection<String> cookiesToPass = extractCookiesWithValuesFromHeaders(authenticationResponse.getHeaders());
 
@@ -74,8 +77,9 @@ public class InscriptionTask implements Task
 		for (int i = 0; i < MAX_INSCRIPTION_ATTEMTS; i++)
 		{
 			bookingResponse = bookPlaceInEvent(parameters, cookiesToPass);
-			LOGGER.info("sent booking request... Responded with status code: {}. The response body: {}",
+			LOGGER.info("sent booking request... Responded with status code: {}",
 					bookingResponse.getStatusCodeValue(), bookingResponse.getBody());
+			LOGGER.debug("The response body: {}", bookingResponse.getBody());
 
 			if (inscriptionIsNotYetOpen(bookingResponse))
 			{
@@ -97,8 +101,9 @@ public class InscriptionTask implements Task
 		assertSuccessfulBooking(bookingResponse);
 
 		final ResponseEntity<String> confirmationResponse = confirmBooking(parameters, cookiesToPass);
-		LOGGER.info("sent booking confirmation... Responded with status code: {}. The response body: {}",
-				confirmationResponse.getStatusCodeValue(), confirmationResponse.getBody());
+		LOGGER.info("sent booking confirmation... Responded with status code: {}",
+				confirmationResponse.getStatusCodeValue());
+		LOGGER.debug("The response body: {}", confirmationResponse.getBody());
 		assertSuccessfulConfirmation(confirmationResponse);
 	}
 
