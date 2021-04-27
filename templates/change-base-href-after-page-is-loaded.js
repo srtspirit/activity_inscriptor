@@ -1,0 +1,1 @@
+$(document).ready(() => document.getElementsByTagName("base")[0].setAttribute("href", %s));

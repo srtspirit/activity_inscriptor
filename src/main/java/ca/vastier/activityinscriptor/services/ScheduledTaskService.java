@@ -1,26 +1,33 @@
 package ca.vastier.activityinscriptor.services;
 
+import ca.vastier.activityinscriptor.dtos.LongueuilClassAttendanceDto;
 import ca.vastier.activityinscriptor.dtos.ScheduledTaskDto;
 import ca.vastier.activityinscriptor.exceptions.EntityNotFoundException;
+import ca.vastier.activityinscriptor.persistence.daos.CredentialDao;
 import ca.vastier.activityinscriptor.persistence.daos.ScheduledTaskDao;
+import ca.vastier.activityinscriptor.persistence.entities.CredentialEntity;
 import ca.vastier.activityinscriptor.persistence.entities.ScheduledTaskEntity;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.temporal.ChronoUnit;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
 public class ScheduledTaskService
 {
 	private final ScheduledTaskDao scheduledTaskDao;
+	private final CredentialDao credentialDao;
 	private final ObjectMapper objectMapper;
 
 	@Autowired
-	public ScheduledTaskService(final ScheduledTaskDao scheduledTaskDao)
+	public ScheduledTaskService(final ScheduledTaskDao scheduledTaskDao, final CredentialDao credentialDao)
 	{
 		this.scheduledTaskDao = scheduledTaskDao;
+		this.credentialDao = credentialDao;
 		objectMapper = new ObjectMapper();
 		objectMapper.registerModule(new JavaTimeModule());
 	}
@@ -62,5 +69,34 @@ public class ScheduledTaskService
 		}
 
 		scheduledTaskDao.deleteTaskById(id);
+	}
+
+	public ScheduledTaskDto createTask(final LongueuilClassAttendanceDto longueuilClassAttendanceDto, final String sessionCookie)
+	{
+		//TODO better exception handling
+		final CredentialEntity credentialEntity = credentialDao.findByCookieValue(sessionCookie)
+				.stream()
+				.findFirst()
+				.orElseThrow(() -> new RuntimeException("Could not find credentials"));
+
+		//@formatter:off
+		final ScheduledTaskDto scheduledTaskDto = ScheduledTaskDto.builder()
+				.parameters(Map.of(
+						"username", credentialEntity.getLogin(),
+						"password", credentialEntity.getPassword(),
+						"domain", "longueuil",
+						"eventId", longueuilClassAttendanceDto.getId(),
+						"date", longueuilClassAttendanceDto.getDt(),
+						"visitors", longueuilClassAttendanceDto.getPresent_number(),
+						"delay", "450"))
+				.requiredPreparationTime(7000L)
+				//TODO inscription starts 48h prior to the actual activity. Check the edge case where this period includes changing daylight saving time
+				.startTime(longueuilClassAttendanceDto.getStartDateTime().minus(48L, ChronoUnit.HOURS))
+				.type(ScheduledTaskEntity.TaskType.ACTIVITY_INSCRIPTOR)
+				.status(ScheduledTaskEntity.TaskStatus.SCHEDULED)
+				.build();
+		//@formatter:on
+
+		return createTask(scheduledTaskDto);
 	}
 }
