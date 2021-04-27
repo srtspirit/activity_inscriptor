@@ -1,0 +1,12 @@
+.alert-fixed {
+    display: block;
+    padding: 2px 11px 8px 11px;
+    font-size: 11px;
+    font-family: verdana;
+    position: fixed;
+    right: 50%;
+    margin-right: -150px;
+    top: 10%;
+    width: 301px;
+    z-index: 9999;
+}

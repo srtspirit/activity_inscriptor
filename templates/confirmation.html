@@ -1,0 +1,22 @@
+<div class="modal-dialog modal-sm">
+    <div class="modal-content">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title" id="title">Confirmez votre inscription</h4>
+        </div>
+        <div class="modal-body">
+            <div id="dialog">Svp, confirmez votre inscription au cours</b></div>
+            <div class="book-count-block">Places a reserver:
+                <button class="btn book-count-decrement">-</button>
+                <input id="user-book-count" class="form-control book-count" type="text" value="1" data-mask="9" data-max="5">
+                <button class="btn book-count-increment">+</button>
+            </div>
+            <!--TODO contract_id is not clear what but always the same. Find out what it is-->
+            <input type="hidden" name="contract_id" id="contract_id" value="207239"> <br>
+            <div class="text-center">
+                <button data-dismiss="modal" class="btn btn-cancel" type="button">Annuler</button>
+                <button class="btn btn-confirm" id="confirm" type="button">Confirmer</button>
+            </div>
+        </div>
+    </div>
+</div>
