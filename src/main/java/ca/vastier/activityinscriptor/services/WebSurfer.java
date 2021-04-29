@@ -165,6 +165,7 @@ public class WebSurfer
 
 		final HttpHeaders responseHeaders = new HttpHeaders();
 		responseHeaders.putAll(responseEntity.getHeaders()); //the ones inside the response are unmodifiable
+		responseHeaders.remove("Transfer-Encoding");
 
 		final Optional<List<String>> contentTypes = ofNullable(responseEntity.getHeaders().get(HttpHeaders.CONTENT_TYPE));
 
