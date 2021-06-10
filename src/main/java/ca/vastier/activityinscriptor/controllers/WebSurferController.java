@@ -5,6 +5,7 @@ import ca.vastier.activityinscriptor.dtos.LongueuilReservationResponseDto;
 import ca.vastier.activityinscriptor.dtos.ScheduledTaskDto;
 import ca.vastier.activityinscriptor.services.ScheduledTaskService;
 import ca.vastier.activityinscriptor.services.WebSurfer;
+import ca.vastier.activityinscriptor.services.WebSurfer2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
@@ -29,7 +30,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Map;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
@@ -39,12 +39,43 @@ public class WebSurferController
 	private static final String SURF_PATH = "surf/";
 	private final WebSurfer webSurfer;
 	private final ScheduledTaskService scheduledTaskService;
+	private final WebSurfer2 webSurfer2;
 
 	@Autowired
 	public WebSurferController(final WebSurfer webSurfer, final ScheduledTaskService scheduledTaskService)
 	{
 		this.webSurfer = webSurfer;
 		this.scheduledTaskService = scheduledTaskService;
+
+		webSurfer2 = WebSurfer2.configure()
+				.anyRequest()
+				.removeHeaderFromRequest("accept-encoding")
+				.setRequestHeader("host", "someHost")
+				.setRequestHeader("origin", "someOrigin")
+				.setRequestHeader("referer", "someReferer")
+
+				.anyResponse()
+				.removeHeaderFromResponse("transfer-encoding")
+
+				.responseHasHeaderWithValue("content-type", "text/html")
+				.removeAllHyperLinks()
+				.appendHtmlElementToBody("templates/disclaimer.html", "templates/styles.css")
+				.changeBaseHrefInDomResponse("newBaseHref")
+
+				.hasStatus(302)
+				.setResponseHeader("location", "newLocation")
+
+				.get("home/dashboard")
+				.removeAllHyperLinks()
+
+				.post("home/login")
+				.hasStatus(302)
+				.customTransformation(resp -> {})
+
+				.post("/ajax/**")
+				.stopProcessingReturnValue(new WebSurfer2.HttpResponseWrapper(null, null, null, null, null))
+
+				.build();
 	}
 
 	@PostMapping(value = SURF_PATH + "ajax/classinfo/booking_confirm", consumes = { MediaType.APPLICATION_FORM_URLENCODED_VALUE })
