@@ -1,4 +1,6 @@
 .idea/*
 activity-inscriptor.iml
 target/*
-
+.classpath
+.project
+.settings/**
