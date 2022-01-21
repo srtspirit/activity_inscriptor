@@ -4,7 +4,7 @@ import ca.vastier.activityinscriptor.dtos.LongueuilClassAttendanceDto;
 import ca.vastier.activityinscriptor.dtos.LongueuilReservationResponseDto;
 import ca.vastier.activityinscriptor.dtos.ScheduledTaskDto;
 import ca.vastier.activityinscriptor.services.ScheduledTaskService;
-import ca.vastier.activityinscriptor.services.httpproxy.HttpProxyService;
+import ca.vlastier.httpproxy.HttpProxyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;

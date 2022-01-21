@@ -2,8 +2,9 @@ package ca.vastier.activityinscriptor.config;
 
 import ca.vastier.activityinscriptor.services.CredentialService;
 import ca.vastier.activityinscriptor.services.FileReader;
-import ca.vastier.activityinscriptor.services.httpproxy.HttpProxyService;
-import ca.vastier.activityinscriptor.services.httpproxy.HttpRequestExecutor;
+import ca.vlastier.httpproxy.HttpProxyService;
+import ca.vlastier.httpproxy.HttpRequestExecutor;
+import ca.vlastier.httpproxy.RestTemplateHttpRequestExecutorImpl;
 import org.jsoup.nodes.Node;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -40,6 +41,12 @@ public class Config
 	public Clock utcClock()
 	{
 		return Clock.systemUTC();
+	}
+
+	@Bean
+	public HttpRequestExecutor httpRequestExecutor(final RestTemplate restTemplate)
+	{
+		return new RestTemplateHttpRequestExecutorImpl(restTemplate);
 	}
 
 	@Bean

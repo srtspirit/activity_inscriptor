@@ -2,9 +2,7 @@ package ca.vastier.activityinscriptor.services;
 
 import ca.vastier.activityinscriptor.persistence.daos.CredentialDao;
 import ca.vastier.activityinscriptor.persistence.entities.CredentialEntity;
-import ca.vastier.activityinscriptor.services.httpproxy.HttpProxyService;
-import ca.vastier.activityinscriptor.services.httpproxy.HttpProxyService.HttpRequestWrapper;
-import ca.vastier.activityinscriptor.services.httpproxy.HttpProxyService.HttpResponseWrapper;
+import ca.vlastier.httpproxy.HttpProxyService;
 import org.springframework.stereotype.Component;
 
 import java.net.HttpCookie;
@@ -25,7 +23,7 @@ public class CredentialService
 		this.credentialDao = credentialDao;
 	}
 
-	public void saveCredentialsWithCookie(final HttpResponseWrapper responseWrapper)
+	public void saveCredentialsWithCookie(final HttpProxyService.HttpResponseWrapper responseWrapper)
 	{
 		//TODO what if format is not good
 		final String[] bodyParams = responseWrapper.getOriginalRequest().getBody().toString().split("\\&");
