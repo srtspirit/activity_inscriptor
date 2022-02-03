@@ -66,6 +66,10 @@ public class WebSurferController
 
 		final int ciSessionCookieValueStartIndex = ciSessionCookieStartIndex + "ci_session=".length();
 		int ciSessionCookieValueEndIndex = cookies.indexOf(";", ciSessionCookieValueStartIndex);
+		if (ciSessionCookieValueEndIndex == -1)
+		{
+			ciSessionCookieValueEndIndex = cookies.length();
+		}
 
 		final ScheduledTaskDto created;
 		try
