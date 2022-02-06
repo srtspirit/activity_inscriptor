@@ -7,6 +7,7 @@ import ca.vastier.activityinscriptor.persistence.daos.CredentialDao;
 import ca.vastier.activityinscriptor.persistence.daos.ScheduledTaskDao;
 import ca.vastier.activityinscriptor.persistence.entities.CredentialEntity;
 import ca.vastier.activityinscriptor.persistence.entities.ScheduledTaskEntity;
+import ca.vastier.activityinscriptor.tasks.InscriptionTaskConstants;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,8 @@ import org.springframework.stereotype.Service;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.UUID;
+
+import static ca.vastier.activityinscriptor.tasks.InscriptionTaskConstants.PropertyNames.*;
 
 @Service
 public class ScheduledTaskService
@@ -82,13 +85,13 @@ public class ScheduledTaskService
 		//@formatter:off
 		final ScheduledTaskDto scheduledTaskDto = ScheduledTaskDto.builder()
 				.parameters(Map.of(
-						"username", credentialEntity.getLogin(),
-						"password", credentialEntity.getPassword(),
-						"domain", "longueuil",
-						"eventId", longueuilClassAttendanceDto.getId(),
-						"date", longueuilClassAttendanceDto.getDt(),
-						"visitors", longueuilClassAttendanceDto.getPresent_number(),
-						"delay", "450"))
+						USERNAME, credentialEntity.getLogin(),
+						PASSWORD, credentialEntity.getPassword(),
+						DOMAIN, "longueuil",
+						EVENT_ID, longueuilClassAttendanceDto.getId(),
+						DATE, longueuilClassAttendanceDto.getDt(),
+						NUMBER_OF_VISITORS, longueuilClassAttendanceDto.getPresent_number(),
+						DELAY, "450"))
 				.requiredPreparationTime(7000L)
 				//TODO inscription starts 48h prior to the actual activity. Check the edge case where this period includes changing daylight saving time
 				.startTime(longueuilClassAttendanceDto.getStartDateTime().minus(48L, ChronoUnit.HOURS))

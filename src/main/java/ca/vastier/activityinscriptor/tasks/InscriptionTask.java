@@ -1,5 +1,7 @@
 package ca.vastier.activityinscriptor.tasks;
 
+import ca.vastier.activityinscriptor.tasks.InscriptionTaskConstants.FliipDtoNames;
+import ca.vastier.activityinscriptor.tasks.InscriptionTaskConstants.PropertyNames;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -23,6 +25,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+
 @Component("ACTIVITY_INSCRIPTOR") //TODO find a way to name beans
 public class InscriptionTask implements Task
 {
@@ -30,8 +33,6 @@ public class InscriptionTask implements Task
 	private final static String ERROR_FIELD = "error";
 	private final static String MESSAGE_FIELD = "message";
 	private final static long DEFAULT_POLL_INSCRIPTION_OPENING_INTERVAL_MS = 950L;
-
-	private final int MAX_INSCRIPTION_ATTEMTS = 100;
 
 	//TODO decouple spring's rest template
 	private final RestTemplate restTemplate;
@@ -50,6 +51,9 @@ public class InscriptionTask implements Task
 	@Setter
 	@Value("${task.inscriptor.confirm-booking-url}")
 	private String bookingConfirmUrl;
+	@Setter
+	@Value("${task.inscriptor.max-attempts}")
+	private int maxInscriptionAttempts;
 
 	@Autowired
 	public InscriptionTask(final RestTemplate restTemplate)
@@ -71,10 +75,10 @@ public class InscriptionTask implements Task
 
 		ResponseEntity<String> bookingResponse = null;
 
-		final String givenDelay = (String) parameters.get("delay");
+		final String givenDelay = (String) parameters.get(PropertyNames.DELAY);
 		final long delayBetweenTries = givenDelay != null ? Long.parseLong(givenDelay) : DEFAULT_POLL_INSCRIPTION_OPENING_INTERVAL_MS;
 
-		for (int i = 0; i < MAX_INSCRIPTION_ATTEMTS; i++)
+		for (int i = 0; i < maxInscriptionAttempts; i++)
 		{
 			bookingResponse = bookPlaceInEvent(parameters, cookiesToPass);
 			LOGGER.info("sent booking request... Responded with status code: {}",
@@ -111,7 +115,7 @@ public class InscriptionTask implements Task
 	{
 		final StringBuilder uriSb = new StringBuilder();
 		uriSb.append("https://");
-		uriSb.append((String) parameters.get("domain"));
+		uriSb.append((String) parameters.get(PropertyNames.DOMAIN));
 		uriSb.append(".");
 		uriSb.append(mainUrl);
 		uriSb.append("/");
@@ -124,10 +128,10 @@ public class InscriptionTask implements Task
 		cookiesToPass.forEach(cookie -> confirmBookingHeaders.add("cookie", cookie));
 
 		final MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
-		map.add("id", (String) parameters.get("eventId"));
-		map.add("dt", (String) parameters.get("date"));
-		map.add("contract_id", findContractNumber());
-		map.add("present_number", (String) parameters.get("visitors")); //not mandatory. null is 1
+		map.add(FliipDtoNames.EVENT_ID, (String) parameters.get(PropertyNames.EVENT_ID));
+		map.add(FliipDtoNames.DATE, (String) parameters.get(PropertyNames.DATE));
+		map.add(FliipDtoNames.CONTRACT_ID, findContractNumber());
+		map.add(FliipDtoNames.NUMBER_OF_VISITORS, (String) parameters.get(PropertyNames.NUMBER_OF_VISITORS)); //not mandatory. null is 1
 
 		final HttpEntity<MultiValueMap<String, String>> bookingRequest = new HttpEntity<>(map, confirmBookingHeaders);
 
@@ -138,7 +142,7 @@ public class InscriptionTask implements Task
 	{
 		final StringBuilder uriSb = new StringBuilder();
 		uriSb.append("https://");
-		uriSb.append((String) parameters.get("domain"));
+		uriSb.append((String) parameters.get(PropertyNames.DOMAIN));
 		uriSb.append(".");
 		uriSb.append(mainUrl);
 		uriSb.append("/");
@@ -151,9 +155,9 @@ public class InscriptionTask implements Task
 		cookiesToPass.forEach(cookie -> bookingHeaders.add("cookie", cookie));
 
 		final MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
-		map.add("id", (String) parameters.get("eventId"));
-		map.add("dt", (String) parameters.get("date"));
-		//map.add("present_number", (String)parameters.get("present_number")); //not mandatory. null is 1
+		map.add(FliipDtoNames.EVENT_ID, (String) parameters.get(PropertyNames.EVENT_ID));
+		map.add(FliipDtoNames.DATE, (String) parameters.get(PropertyNames.DATE));
+		map.add(FliipDtoNames.NUMBER_OF_VISITORS, (String)parameters.get(PropertyNames.NUMBER_OF_VISITORS)); //not mandatory. null is 1
 
 		final HttpEntity<MultiValueMap<String, String>> bookingRequest = new HttpEntity<>(map, bookingHeaders);
 
@@ -164,7 +168,7 @@ public class InscriptionTask implements Task
 	{
 		final StringBuilder uriSb = new StringBuilder();
 		uriSb.append("https://");
-		uriSb.append((String) parameters.get("domain"));
+		uriSb.append((String) parameters.get(PropertyNames.DOMAIN));
 		uriSb.append(".");
 		uriSb.append(mainUrl);
 		uriSb.append("/");
@@ -174,8 +178,8 @@ public class InscriptionTask implements Task
 		loginHeaders.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
 		final MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
-		map.add("username", (String) parameters.get("username"));
-		map.add("password", (String) parameters.get("password"));
+		map.add(FliipDtoNames.USERNAME, (String) parameters.get(PropertyNames.USERNAME));
+		map.add(FliipDtoNames.PASSWORD, (String) parameters.get(PropertyNames.PASSWORD));
 
 		final HttpEntity<MultiValueMap<String, String>> loginRequest = new HttpEntity<>(map, loginHeaders);
 
@@ -185,7 +189,7 @@ public class InscriptionTask implements Task
 	private void assertSuccessfulLogin(final ResponseEntity<String> responseEntity)
 	{
 		if (!HttpStatus.FOUND.equals(responseEntity.getStatusCode()) || !responseEntity.getHeaders()
-				.get("Location")
+				.get(HttpHeaders.LOCATION)
 				.stream()
 				.anyMatch(str -> str.contains("/home/dashboard")))
 		{
@@ -271,7 +275,7 @@ public class InscriptionTask implements Task
 	{
 		return headers.get("set-cookie")
 				.stream()
-				.map(wholeCookie -> wholeCookie.substring(0, wholeCookie.indexOf(';')))
+				.map(wholeCookie -> wholeCookie.substring(0, wholeCookie.indexOf(';'))) //TODO what's that with ; and lats cookie in the string?
 				.collect(Collectors.toSet());
 	}
 
